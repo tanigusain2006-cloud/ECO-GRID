@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoGrid — Educator Dashboard</title>
+<style>
+  :root {
+    --bg: #0a2e1a;
+    --surface: #0f3d22;
+    --surface2: #143d24;
+    --accent: #4caf50;
+    --bright: #76ff03;
+    --text: #e8f5e9;
+    --muted: #a5d6a7;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    background: var(--surface);
+    border-bottom: 1px solid #1e5c2e;
+    padding: 0 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px; position: sticky; top: 0; z-index: 100;
+  }
+  .nav-logo { font-size: 1.2rem; font-weight: 700; color: var(--bright); letter-spacing: 1px; text-decoration: none; }
+  .nav-links { display: flex; gap: 0.25rem; list-style: none; }
+  .nav-links a { color: var(--muted); text-decoration: none; padding: 0.5rem 0.9rem; border-radius: var(--radius); font-size: 0.9rem; transition: background 200ms ease, color 200ms ease; }
+  .nav-links a:hover { background: #1e5c2e; color: var(--text); }
+  .nav-links a.active { background: var(--accent); color: #fff; font-weight: 600; }
+  .nav-links a:focus-visible { outline: 2px solid var(--bright); outline-offset: 2px; }
+  @media(max-width:520px){ .nav-logo{font-size:1rem;} .nav-links a{padding:0.4rem 0.55rem;font-size:0.78rem;} }
+
+  /* ─── LAYOUT ─── */
+  .wrapper { max-width: 900px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+
+  /* ─── HEADER ─── */
+  .page-header { margin-bottom: 2rem; }
+  .page-header h1 { font-size: clamp(1.5rem, 4vw, 2rem); color: var(--bright); margin-bottom: 0.5rem; }
+  .page-header p { color: var(--muted); line-height: 1.6; max-width: 640px; }
+
+  /* ─── PRIVACY NOTICE ─── */
+  .privacy-notice {
+    background: rgba(76,175,80,0.07);
+    border: 1px solid rgba(76,175,80,0.2);
+    border-radius: var(--radius);
+    padding: 0.875rem 1.25rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .privacy-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.05rem; }
+
+  /* ─── NO DATA BANNER ─── */
+  .no-data-banner {
+    background: var(--surface);
+    border: 1px dashed #1e5c2e;
+    border-radius: var(--radius);
+    padding: 2rem;
+    text-align: center;
+    color: var(--muted);
+    margin-bottom: 2rem;
+  }
+  .no-data-banner .icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+  .no-data-banner p { line-height: 1.6; }
+  .no-data-banner a { color: var(--accent); text-decoration: none; }
+  .no-data-banner a:hover { text-decoration: underline; }
+
+  /* ─── PANELS GRID ─── */
+  .panels-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
+  }
+  @media(max-width:600px){ .panels-grid { grid-template-columns: 1fr; } }
+
+  .insight-panel {
+    background: var(--surface);
+    border: 1px solid #1e5c2e;
+    border-radius: var(--radius);
+    padding: 1.5rem;
+  }
+  .panel-header {
+    display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1rem;
+    padding-bottom: 0.875rem; border-bottom: 1px solid #1e5c2e;
+  }
+  .panel-icon { font-size: 1.5rem; flex-shrink: 0; margin-top: 0.05rem; }
+  .panel-title { color: var(--bright); font-size: 0.95rem; font-weight: 600; line-height: 1.3; }
+  .panel-subtitle { color: var(--muted); font-size: 0.78rem; margin-top: 0.2rem; }
+  .panel-body { color: var(--text); font-size: 0.9rem; line-height: 1.7; }
+  .panel-body .highlight { color: var(--bright); font-weight: 600; }
+  .panel-body .warning { color: #ffcc80; font-weight: 500; }
+
+  /* ─── STATUS BADGE ─── */
+  .status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.7rem;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-top: 0.75rem;
+  }
+  .badge-good { background: rgba(76,175,80,0.2); color: var(--accent); }
+  .badge-fair { background: rgba(255,204,128,0.2); color: #ffcc80; }
+  .badge-needs-work { background: rgba(244,67,54,0.15); color: #ef9a9a; }
+  .badge-no-data { background: rgba(165,214,167,0.1); color: var(--muted); }
+
+  /* ─── CATEGORY BARS ─── */
+  .cat-bars { margin-top: 1rem; display: flex; flex-direction: column; gap: 0.6rem; }
+  .cat-bar-row { display: flex; align-items: center; gap: 0.75rem; }
+  .cat-bar-label { font-size: 0.8rem; color: var(--muted); width: 90px; flex-shrink: 0; }
+  .cat-bar-track { flex: 1; height: 8px; background: #1e5c2e; border-radius: 4px; overflow: hidden; }
+  .cat-bar-fill { height: 100%; border-radius: 4px; transition: width 600ms ease; }
+  .cat-bar-note { font-size: 0.72rem; color: var(--muted); width: 60px; text-align: right; flex-shrink: 0; }
+
+  /* ─── REFLECTION PROMPTS ─── */
+  .reflection-section {
+    background: var(--surface);
+    border: 1px solid #1e5c2e;
+    border-radius: var(--radius);
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+  .reflection-section h2 { color: var(--bright); font-size: 1.2rem; margin-bottom: 0.5rem; }
+  .reflection-section .intro { color: var(--muted); font-size: 0.875rem; line-height: 1.55; margin-bottom: 1.5rem; }
+  .prompt-list { display: flex; flex-direction: column; gap: 0.875rem; }
+  .prompt-item {
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    border-left: 3px solid var(--accent);
+    color: var(--text);
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+  .prompt-num { color: var(--accent); font-weight: 700; margin-right: 0.4rem; }
+
+  /* ─── RESET SECTION ─── */
+  .reset-section {
+    background: var(--surface);
+    border: 1px solid #1e5c2e;
+    border-radius: var(--radius);
+    padding: 1.75rem;
+  }
+  .reset-section h2 { color: var(--text); font-size: 1rem; margin-bottom: 0.4rem; }
+  .reset-section p { color: var(--muted); font-size: 0.85rem; line-height: 1.55; margin-bottom: 1.25rem; }
+  .btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 0.7rem 1.5rem;
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 200ms ease;
+  }
+  .btn:hover { background: #43a047; }
+  .btn:focus-visible { outline: 2px solid var(--bright); outline-offset: 3px; }
+  .btn-danger { background: transparent; border: 1px solid #c62828; color: #ef9a9a; }
+  .btn-danger:hover { background: rgba(198,40,40,0.1); }
+
+  /* ─── CONFIRM DIALOG ─── */
+  .confirm-dialog {
+    display: none;
+    background: var(--bg);
+    border: 1px solid #c62828;
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-top: 1rem;
+  }
+  .confirm-dialog.show { display: block; }
+  .confirm-dialog p { color: var(--text); font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.5; }
+  .confirm-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .btn-confirm-yes { background: #c62828; border: none; color: #fff; padding: 0.6rem 1.25rem; border-radius: var(--radius); font-weight: 600; cursor: pointer; transition: background 200ms; }
+  .btn-confirm-yes:hover { background: #b71c1c; }
+  .btn-confirm-no { background: transparent; border: 1px solid #1e5c2e; color: var(--muted); padding: 0.6rem 1.25rem; border-radius: var(--radius); cursor: pointer; transition: all 200ms; }
+  .btn-confirm-no:hover { border-color: var(--accent); color: var(--text); }
+  .btn-confirm-yes:focus-visible, .btn-confirm-no:focus-visible { outline: 2px solid var(--bright); outline-offset: 2px; }
+
+  /* ─── SUCCESS MSG ─── */
+  .reset-success {
+    display: none;
+    color: var(--accent);
+    font-size: 0.875rem;
+    margin-top: 0.75rem;
+  }
+  .reset-success.show { display: block; }
+</style>
+</head>
+<body>
+
+<!-- ─── NAV ─── -->
+<nav>
+  <a href="index.html" class="nav-logo">ECOGRID</a>
+  <ul class="nav-links">
+    <li><a href="index.html">Play</a></li>
+    <li><a href="learn.html">Learn</a></li>
+    <li><a href="educator.html" class="active" aria-current="page">Educator</a></li>
+  </ul>
+</nav>
+
+<div class="wrapper">
+
+  <div class="page-header">
+    <h1>Classroom Sustainability Overview</h1>
+    <p>Descriptive insights derived from activity on this device. Use these patterns to guide class discussion, not to grade individual students.</p>
+  </div>
+
+  <!-- ─── PRIVACY NOTICE ─── -->
+  <div class="privacy-notice" role="note">
+    <span class="privacy-icon" aria-hidden="true">🔒</span>
+    <span>This dashboard reads only from this device's local storage. No data leaves this device, no accounts are required, and no information is shared with any server or third party.</span>
+  </div>
+
+  <!-- ─── NO DATA BANNER (shown when no sessions) ─── -->
+  <div class="no-data-banner" id="noDataBanner" style="display:none;" role="status">
+    <div class="icon" aria-hidden="true">📋</div>
+    <p>No session data has been recorded yet on this device. Have students <a href="index.html">play a round first</a>, then return here to view patterns.</p>
+  </div>
+
+  <!-- ─── INSIGHT PANELS ─── -->
+  <div class="panels-grid" id="panelsGrid">
+
+    <div class="insight-panel">
+      <div class="panel-header">
+        <span class="panel-icon" aria-hidden="true">♻️</span>
+        <div>
+          <div class="panel-title">Sorting Habit Insight</div>
+          <div class="panel-subtitle">Correct vs. incorrect placements across sessions</div>
+        </div>
+      </div>
+      <div class="panel-body" id="sortingInsight">Calculating...</div>
+    </div>
+
+    <div class="insight-panel">
+      <div class="panel-header">
+        <span class="panel-icon" aria-hidden="true">🎮</span>
+        <div>
+          <div class="panel-title">Session Engagement</div>
+          <div class="panel-subtitle">Play frequency and recency</div>
+        </div>
+      </div>
+      <div class="panel-body" id="engagementInsight">Calculating...</div>
+    </div>
+
+    <div class="insight-panel">
+      <div class="panel-header">
+        <span class="panel-icon" aria-hidden="true">📊</span>
+        <div>
+          <div class="panel-title">Waste Category Strengths</div>
+          <div class="panel-subtitle">Which categories students handle best and least</div>
+        </div>
+      </div>
+      <div class="panel-body" id="categoryInsight">Calculating...</div>
+    </div>
+
+    <div class="insight-panel">
+      <div class="panel-header">
+        <span class="panel-icon" aria-hidden="true">🏙️</span>
+        <div>
+          <div class="panel-title">City Health Narrative</div>
+          <div class="panel-subtitle">Overall environmental impact from sorting patterns</div>
+        </div>
+      </div>
+      <div class="panel-body" id="cityInsight">Calculating...</div>
+    </div>
+
+  </div><!-- /panels-grid -->
+
+  <!-- ─── REFLECTION PROMPTS ─── -->
+  <section class="reflection-section" aria-labelledby="reflectionHeading">
+    <h2 id="reflectionHeading">Classroom Reflection Prompts</h2>
+    <p class="intro">These open-ended questions are designed to deepen thinking beyond the game. They work well as written responses, small group discussion, or whole-class conversation.</p>
+    <ol class="prompt-list" role="list" aria-label="Discussion prompts for classroom use">
+      <li class="prompt-item" role="listitem">
+        <span class="prompt-num">1.</span>What surprised you about where your waste actually goes after it leaves your home or school?
+      </li>
+      <li class="prompt-item" role="listitem">
+        <span class="prompt-num">2.</span>Which type of waste was hardest to sort correctly, and why do you think that is? Was it the item itself, or your own uncertainty?
+      </li>
+      <li class="prompt-item" role="listitem">
+        <span class="prompt-num">3.</span>What would happen to a city if everyone sorted waste incorrectly for an entire year? Think about water, air, soil, and the people who work in waste systems.
+      </li>
+      <li class="prompt-item" role="listitem">
+        <span class="prompt-num">4.</span>How is sorting waste similar to making decisions in other complex systems — like traffic, food supply chains, or the internet?
+      </li>
+      <li class="prompt-item" role="listitem">
+        <span class="prompt-num">5.</span>What is one change you could realistically make at home based on what you learned from this game and the learning hub?
+      </li>
+    </ol>
+  </section>
+
+  <!-- ─── RESET ─── -->
+  <section class="reset-section" aria-labelledby="resetHeading">
+    <h2 id="resetHeading">Clear Session Data</h2>
+    <p>This will permanently remove all EcoGrid activity data stored on this device. Use this to reset between class groups or at the end of a term. This action cannot be undone.</p>
+    <button class="btn btn-danger" id="resetBtn" aria-expanded="false" aria-controls="confirmDialog">🗑 Clear Session Data</button>
+
+    <div class="confirm-dialog" id="confirmDialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <p id="confirmTitle"><strong>Are you sure?</strong> This will erase all sorting history, session counts, and waste breakdown data stored on this device. The game will show no data until students play again.</p>
+      <div class="confirm-actions">
+        <button class="btn-confirm-yes" id="confirmYes" aria-label="Yes, permanently clear all session data">Yes, clear all data</button>
+        <button class="btn-confirm-no" id="confirmNo" aria-label="Cancel, keep existing data">Cancel</button>
+      </div>
+    </div>
+
+    <p class="reset-success" id="resetSuccess" role="status" aria-live="polite">✅ Session data cleared. Data panels will update when students play again.</p>
+  </section>
+
+</div><!-- /wrapper -->
+
+<script>
+/* ────────────────────────────────────
+   EDUCATOR DASHBOARD — LocalStorage Reader
+   ──────────────────────────────────── */
+
+const LS_KEYS = [
+  'ecogrid_correct_sorts',
+  'ecogrid_wrong_sorts',
+  'ecogrid_sessions_played',
+  'ecogrid_last_played',
+  'ecogrid_waste_breakdown'
+];
+
+function lsGet(key, def) {
+  try {
+    const v = localStorage.getItem(key);
+    return v === null ? def : JSON.parse(v);
+  } catch {
+    return def;
+  }
+}
+
+function loadData() {
+  return {
+    correct:    lsGet('ecogrid_correct_sorts', null),
+    wrong:      lsGet('ecogrid_wrong_sorts', null),
+    sessions:   lsGet('ecogrid_sessions_played', null),
+    lastPlayed: lsGet('ecogrid_last_played', null),
+    breakdown:  lsGet('ecogrid_waste_breakdown', null)
+  };
+}
+
+function hasData(d) {
+  return d.sessions !== null && d.sessions > 0;
+}
+
+// ─── RELATIVE DATE ───
+function relativeDate(isoString) {
+  try {
+    const then = new Date(isoString);
+    const now = new Date();
+    const diffMs = now - then;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return 'today';
+    if (diffDays === 1) return 'yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays/7)} week${Math.floor(diffDays/7)===1?'':'s'} ago`;
+    return `${Math.floor(diffDays/30)} month${Math.floor(diffDays/30)===1?'':'s'} ago`;
+  } catch { return 'recently'; }
+}
+
+// ─── SORTING INSIGHT ───
+function renderSortingInsight(d) {
+  const el = document.getElementById('sortingInsight');
+  if (!hasData(d) || d.correct === null) {
+    el.innerHTML = '<span style="color:var(--muted)">No sorting data recorded yet.</span><span class="status-badge badge-no-data">No data</span>';
+    return;
+  }
+
+  const total = d.correct + d.wrong;
+  if (total === 0) {
+    el.innerHTML = '<span style="color:var(--muted)">Not enough sorting events recorded yet.</span>';
+    return;
+  }
+
+  const ratio = d.correct / total;
+
+  let text, badge;
+  if (ratio >= 0.75) {
+    text = 'Strong sorting habits observed — most items have been sorted correctly across sessions. Students are demonstrating a solid grasp of waste categories.';
+    badge = '<span class="status-badge badge-good">Strong</span>';
+  } else if (ratio >= 0.50) {
+    text = 'Mixed sorting patterns — roughly half of waste items have been placed correctly. Some categories may need reinforcement through the Learning Hub.';
+    badge = '<span class="status-badge badge-fair">Mixed</span>';
+  } else {
+    text = 'Sorting accuracy needs attention — incorrect placements have been more common than correct ones so far. Consider reviewing the four waste categories together before the next session.';
+    badge = '<span class="status-badge badge-needs-work">Needs attention</span>';
+  }
+
+  el.innerHTML = `<p>${text}</p>${badge}`;
+}
+
+// ─── ENGAGEMENT INSIGHT ───
+function renderEngagementInsight(d) {
+  const el = document.getElementById('engagementInsight');
+
+  if (!hasData(d)) {
+    el.innerHTML = '<span style="color:var(--muted)">No sessions recorded yet. Have students play a round first.</span><span class="status-badge badge-no-data">No sessions</span>';
+    return;
+  }
+
+  const sessions = d.sessions;
+  const recency = d.lastPlayed ? relativeDate(d.lastPlayed) : 'an unknown time';
+  const sessionWord = sessions === 1 ? 'session' : 'sessions';
+
+  let engagement;
+  if (sessions >= 10) engagement = 'Strong engagement';
+  else if (sessions >= 4) engagement = 'Moderate engagement';
+  else engagement = 'Early activity';
+
+  const badgeClass = sessions >= 10 ? 'badge-good' : sessions >= 4 ? 'badge-fair' : 'badge-no-data';
+
+  el.innerHTML = `
+    <p>
+      <span class="highlight">${engagement}</span> — multiple play ${sessionWord} recorded on this device.
+      Most recent activity was <span class="highlight">${recency}</span>.
+    </p>
+    <p style="margin-top:0.6rem;color:var(--muted);font-size:0.82rem;">More sessions give a more reliable picture of class-wide sorting patterns.</p>
+    <span class="status-badge ${badgeClass}">${sessions} ${sessionWord}</span>
+  `;
+}
+
+// ─── CATEGORY INSIGHT ───
+function renderCategoryInsight(d) {
+  const el = document.getElementById('categoryInsight');
+
+  if (!hasData(d) || !d.breakdown) {
+    el.innerHTML = '<span style="color:var(--muted)">No category data recorded yet.</span><span class="status-badge badge-no-data">No data</span>';
+    return;
+  }
+
+  const b = d.breakdown;
+  const cats = [
+    { key: 'organic',    label: '🌿 Organic',    color: '#4caf50' },
+    { key: 'recyclable', label: '♻️ Recyclable', color: '#2196f3' },
+    { key: 'hazardous',  label: '☣️ Hazardous',  color: '#f44336' },
+    { key: 'ewaste',     label: '💾 E-Waste',    color: '#9e9e9e' }
+  ];
+
+  const totals = cats.map(c => ({ ...c, count: b[c.key] || 0 }));
+  const maxCount = Math.max(...totals.map(c => c.count), 1);
+
+  const hasCounts = totals.some(c => c.count > 0);
+  if (!hasCounts) {
+    el.innerHTML = '<span style="color:var(--muted)">Category breakdown will appear after more sorting activity.</span>';
+    return;
+  }
+
+  const sorted = [...totals].sort((a,b) => b.count - a.count);
+  const strongest = sorted[0];
+  const weakest = sorted[sorted.length - 1];
+
+  let summary = '';
+  if (strongest.count > 0) {
+    summary += `Students appear most confident with <span class="highlight">${strongest.label}</span> waste. `;
+  }
+  if (weakest.count < strongest.count * 0.5 || weakest.count === 0) {
+    summary += `<span class="warning">${weakest.label}</span> has been sorted correctly least often — it may benefit from focused discussion.`;
+  }
+
+  const bars = totals.map(c => {
+    const pct = maxCount > 0 ? Math.round((c.count / maxCount) * 100) : 0;
+    const note = c.count === maxCount ? 'Most' : c.count === Math.min(...totals.map(x=>x.count)) ? 'Least' : '';
+    return `
+      <div class="cat-bar-row">
+        <span class="cat-bar-label">${c.label}</span>
+        <div class="cat-bar-track">
+          <div class="cat-bar-fill" style="width:${pct}%;background:${c.color}"></div>
+        </div>
+        <span class="cat-bar-note" style="color:${note?'var(--bright)':'var(--muted)'}">${note}</span>
+      </div>
+    `;
+  }).join('');
+
+  el.innerHTML = `<p>${summary}</p><div class="cat-bars">${bars}</div>`;
+}
+
+// ─── CITY HEALTH INSIGHT ───
+function renderCityInsight(d) {
+  const el = document.getElementById('cityInsight');
+
+  if (!hasData(d) || d.correct === null) {
+    el.innerHTML = '<span style="color:var(--muted)">City health will be calculated after students complete sessions.</span><span class="status-badge badge-no-data">No data</span>';
+    return;
+  }
+
+  const total = (d.correct || 0) + (d.wrong || 0);
+  if (total === 0) {
+    el.innerHTML = '<span style="color:var(--muted)">Not enough data to assess city health yet.</span>';
+    return;
+  }
+
+  const ratio = d.correct / total;
+
+  let narrative, badge;
+  if (ratio >= 0.80) {
+    narrative = 'Based on sorting patterns, this classroom\'s virtual city is in good health. Recycling infrastructure is active, landfill growth is minimal, and contamination levels remain low. This reflects genuine understanding of waste categories.';
+    badge = '<span class="status-badge badge-good">City thriving</span>';
+  } else if (ratio >= 0.60) {
+    narrative = 'The virtual city shows moderate health. Some waste is being diverted correctly, but contamination is having a visible impact on the landfill and recycling streams. Strengthening weaker categories would help the city\'s sustainability profile.';
+    badge = '<span class="status-badge badge-fair">Holding steady</span>';
+  } else {
+    narrative = 'The virtual city shows signs of environmental stress. Landfill growth has been significant across sessions, and contamination is affecting recycling quality. More practice with hazardous and e-waste sorting — often the trickiest categories — could help reverse this trend.';
+    badge = '<span class="status-badge badge-needs-work">Under stress</span>';
+  }
+
+  el.innerHTML = `<p>${narrative}</p>${badge}`;
+}
+
+// ─── RENDER ALL ───
+function renderDashboard() {
+  const d = loadData();
+
+  if (!hasData(d)) {
+    document.getElementById('noDataBanner').style.display = 'block';
+    document.getElementById('panelsGrid').style.opacity = '0.45';
+  } else {
+    document.getElementById('noDataBanner').style.display = 'none';
+    document.getElementById('panelsGrid').style.opacity = '1';
+  }
+
+  renderSortingInsight(d);
+  renderEngagementInsight(d);
+  renderCategoryInsight(d);
+  renderCityInsight(d);
+}
+
+// ─── RESET ───
+const resetBtn = document.getElementById('resetBtn');
+const confirmDialog = document.getElementById('confirmDialog');
+const confirmYes = document.getElementById('confirmYes');
+const confirmNo = document.getElementById('confirmNo');
+const resetSuccess = document.getElementById('resetSuccess');
+
+resetBtn.addEventListener('click', () => {
+  const isOpen = confirmDialog.classList.contains('show');
+  confirmDialog.classList.toggle('show', !isOpen);
+  resetBtn.setAttribute('aria-expanded', !isOpen);
+  if (!isOpen) { confirmYes.focus(); }
+});
+
+confirmNo.addEventListener('click', () => {
+  confirmDialog.classList.remove('show');
+  resetBtn.setAttribute('aria-expanded', 'false');
+  resetBtn.focus();
+});
+
+confirmYes.addEventListener('click', () => {
+  try {
+    LS_KEYS.forEach(key => localStorage.removeItem(key));
+  } catch (e) {
+    // Gracefully ignore storage errors
+  }
+  confirmDialog.classList.remove('show');
+  resetBtn.setAttribute('aria-expanded', 'false');
+  resetSuccess.classList.add('show');
+  setTimeout(() => resetSuccess.classList.remove('show'), 5000);
+  renderDashboard();
+});
+
+// Keyboard dismiss dialog
+confirmDialog.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    confirmDialog.classList.remove('show');
+    resetBtn.setAttribute('aria-expanded', 'false');
+    resetBtn.focus();
+  }
+});
+
+// ─── INIT ───
+renderDashboard();
+</script>
+</body>
+</html>
